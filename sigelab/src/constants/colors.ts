@@ -25,7 +25,8 @@ export const COLORS = {
 
   // Texto sobre fondos de marca
   textPrimary: '#2949E8', // Enlaces y acciones
-  textNavy: '##021E3B', // Texto azul oscuro
+  textNavy: '#021E3B', // Texto azul oscuro
+  backgroundSelected: '#2949e808',
 
   // Estados
   success: '#10B981',
@@ -36,10 +37,12 @@ export const COLORS = {
   errorLight: '#FEE2E2',
   info: '#0EA5E9',
   infoLight: '#E0F2FE',
+  icon: '#6B91D6',
 
   // Bordes y divisores
   border: '#DCE5F0',
   borderDark: '#CBD5E1',
+  filter: '#EAF1FC',
   divider: '#E2E8F0',
   borderbutton: 'rgba(255, 255, 255, 0.15)',
   backgroundInput: 'rgba(255,255,255,0.82)',

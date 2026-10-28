@@ -1,21 +1,18 @@
 import { COLORS } from '@/constants/colors';
 import { router } from 'expo-router';
 import { FlaskConical } from 'lucide-react-native';
-import {
-  ImageBackground,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function Index() {
   return (
-    <ImageBackground
-      source={require('../../assets/images/sigelab.png')}
-      style={styles.background}
-      resizeMode='cover'
-    >
+    <View style={styles.background}>
+      {/* Imagen de fondo */}
+      <Image
+        source={require('../../assets/images/sigelab.png')}
+        style={styles.backgroundImage}
+        resizeMode='cover'
+        accessible={false}
+      />
       {/* Overlay azul */}
       <View style={styles.overlay} />
 
@@ -61,7 +58,7 @@ export default function Index() {
           <Text style={styles.buttonText}>Comenzar</Text>
         </Pressable>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
@@ -69,8 +66,16 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: '100%',
-    height: '100%',
+    position: 'relative',
+    overflow: 'hidden',
   },
+
+  backgroundImage: {
+    ...StyleSheet.absoluteFill,
+    width: undefined,
+    height: undefined,
+  },
+
   overlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.glassnavi,
