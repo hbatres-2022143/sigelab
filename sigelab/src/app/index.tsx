@@ -13,7 +13,6 @@ export default function Index() {
         resizeMode='cover'
         accessible={false}
       />
-      {/* Overlay azul */}
       <View style={styles.overlay} />
 
       <View style={styles.container}>
@@ -89,6 +88,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     zIndex: 1,
   },
+
+  //LOGOTIPO
   header: {
     alignItems: 'center',
   },
@@ -104,6 +105,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1,
   },
+
+  //DESCRIPCIÓN DEL TEMA
   subtitle: {
     marginTop: 14,
     color: COLORS.textWhiteSecondary,
@@ -129,6 +132,7 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     fontWeight: '400',
   },
+  //BOTON COMENZAR
   button: {
     width: '100%',
     height: 54,

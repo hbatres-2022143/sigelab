@@ -22,9 +22,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Equipment_Details() {
+  // Recupera el identificador enviado mediante los parámetros de navegación
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();
-
+  // Convierte el parámetro en un único identificador
   const equipmentId = Array.isArray(id) ? id[0] : id;
+
+  // Busca el equipo utilizando su ID o código de inventario
   const equipment = equipmentData.find((item) => {
     const matchesId =
       String(item.id).toLowerCase() ===
@@ -41,13 +44,17 @@ export default function Equipment_Details() {
     return matchesId || matchesCode;
   });
 
+  // Controla el índice de la fotografía que se muestra actualmente.
   const [imageIndex, setImageIndex] = useState(0);
+
+  // Si el equipo no existe, muestra una pantalla de error.
   if (!equipment) {
     return (
       <SafeAreaView
         style={styles.safeArea}
         edges={['top']}
       >
+        {/* ENCABEZADO DE LA PANTALLA */}
         <View style={styles.header}>
           <Pressable
             style={styles.headerButton}
@@ -63,6 +70,7 @@ export default function Equipment_Details() {
           <Text style={styles.headerTitle}>Detalle del equipo</Text>
         </View>
 
+        {/* MENSAJE DE EQUIPO NO ENCONTRADO */}
         <View style={styles.notFoundContainer}>
           <View style={styles.notFoundIcon}>
             <QrCode
@@ -70,13 +78,18 @@ export default function Equipment_Details() {
               color={COLORS.primary}
             />
           </View>
+
           <Text style={styles.notFoundTitle}>Equipo no encontrado</Text>
+
           <Text style={styles.notFoundDescription}>
             No se encontró ningún equipo asociado con el código:
           </Text>
+
           <Text style={styles.notFoundCode}>
             {equipmentId || 'Sin identificador'}
           </Text>
+
+          {/* REGRESAR A LA PANTALLA ANTERIOR */}
           <Pressable
             style={({ pressed }) => [
               styles.backButton,
@@ -91,10 +104,13 @@ export default function Equipment_Details() {
     );
   }
 
+  // Obtiene las fotografías del equipo.
+  // Si no tiene una galería, utiliza su imagen principal.
   const images = equipment.images?.length
     ? equipment.images
     : [equipment.image];
 
+  // Asigna un color según el estado actual del equipo.
   const statusColor =
     equipment.status === 'Disponible'
       ? COLORS.success
@@ -104,6 +120,7 @@ export default function Equipment_Details() {
           ? COLORS.error
           : COLORS.warning;
 
+  // Asigna un fondo según el estado del equipo.
   const statusBackground =
     equipment.status === 'Disponible'
       ? COLORS.successLight
@@ -113,10 +130,12 @@ export default function Equipment_Details() {
           ? COLORS.errorLight
           : COLORS.warningLight;
 
+  // Avanza a la siguiente fotografía de la galería
   const nextImage = () => {
     setImageIndex((current) => (current + 1) % images.length);
   };
 
+  // Regresa a la fotografía anterior de la galería
   const previousImage = () => {
     setImageIndex((current) => (current - 1 + images.length) % images.length);
   };
@@ -127,6 +146,7 @@ export default function Equipment_Details() {
       edges={['top']}
     >
       <View style={styles.header}>
+        {/* BOTÓN PARA REGRESAR */}
         <Pressable
           style={styles.headerButton}
           onPress={() => router.back()}
@@ -137,12 +157,15 @@ export default function Equipment_Details() {
             color={COLORS.textWhite}
           />
         </Pressable>
+
         <Text
           style={styles.headerTitle}
           numberOfLines={1}
         >
           Detalle del equipo
         </Text>
+
+        {/* CONSULTAR CÓDIGO DE INVENTARIO */}
         <Pressable
           style={styles.headerButton}
           onPress={() =>
@@ -156,6 +179,7 @@ export default function Equipment_Details() {
           />
         </Pressable>
       </View>
+
       <View style={styles.contentContainer}>
         <ScrollView
           style={styles.scroll}
@@ -163,19 +187,24 @@ export default function Equipment_Details() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.gallery}>
+            {/* IMAGEN ACTUAL DEL EQUIPO */}
             <Image
               source={images[imageIndex]}
               style={styles.productImage}
               resizeMode='contain'
             />
+
+            {/* CONTADOR DE FOTOGRAFÍAS */}
             <View style={styles.imageCounter}>
               <Text style={styles.counterText}>
                 {imageIndex + 1} / {images.length}
               </Text>
             </View>
 
+            {/* CONTROLES DEL CARRUSEL */}
             {images.length > 1 && (
               <>
+                {/* FOTOGRAFÍA ANTERIOR */}
                 <Pressable
                   style={[styles.carouselButton, styles.leftButton]}
                   onPress={previousImage}
@@ -186,6 +215,8 @@ export default function Equipment_Details() {
                     color={COLORS.navy}
                   />
                 </Pressable>
+
+                {/* FOTOGRAFÍA SIGUIENTE */}
                 <Pressable
                   style={[styles.carouselButton, styles.rightButton]}
                   onPress={nextImage}
@@ -199,6 +230,8 @@ export default function Equipment_Details() {
               </>
             )}
           </View>
+
+          {/* INDICADORES DE POSICIÓN DE LA GALERÍA */}
           <View style={styles.pagination}>
             {images.map((_, index) => (
               <Pressable
@@ -209,13 +242,17 @@ export default function Equipment_Details() {
               />
             ))}
           </View>
+
           <View style={styles.separator} />
+
           <View style={styles.productHeading}>
             <View style={styles.productTitleContainer}>
               <Text style={styles.productName}>{equipment.name}</Text>
 
               <Text style={styles.productCode}>{equipment.code}</Text>
             </View>
+
+            {/* INDICADOR VISUAL DEL ESTADO */}
             <View
               style={[
                 styles.statusBadge,
@@ -225,21 +262,25 @@ export default function Equipment_Details() {
               <View
                 style={[styles.statusDot, { backgroundColor: statusColor }]}
               />
+
               <Text style={[styles.statusText, { color: statusColor }]}>
                 {equipment.status}
               </Text>
             </View>
           </View>
-
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <ClipboardList
                 size={24}
                 color={COLORS.primary}
               />
+
               <Text style={styles.cardTitle}>Información del equipo</Text>
             </View>
+
             <View style={styles.cardSeparator} />
+
+            {/* DATOS TÉCNICOS DEL EQUIPO */}
             <InfoRow
               label='Tipo'
               value={equipment.category}
@@ -264,9 +305,11 @@ export default function Equipment_Details() {
               label='Cód. Laboratorio'
               value={equipment.codeLaboratory || 'No registrado'}
             />
+            {/* ESTADO ACTUAL DEL EQUIPO */}
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Estado</Text>
               <Text style={styles.infoColon}>:</Text>
+
               <View
                 style={[
                   styles.statusBadge,
@@ -277,6 +320,7 @@ export default function Equipment_Details() {
                 <View
                   style={[styles.statusDot, { backgroundColor: statusColor }]}
                 />
+
                 <Text style={[styles.statusText, { color: statusColor }]}>
                   {equipment.status}
                 </Text>
@@ -284,6 +328,7 @@ export default function Equipment_Details() {
             </View>
           </View>
 
+          {/* Esta sección aparece únicamente si existe una descripción. */}
           {equipment.description ? (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
@@ -291,6 +336,7 @@ export default function Equipment_Details() {
                   size={24}
                   color={COLORS.primary}
                 />
+
                 <Text style={styles.cardTitle}>Descripción</Text>
               </View>
 
@@ -307,19 +353,26 @@ export default function Equipment_Details() {
               )
             }
           >
+            {/* ICONO QR */}
             <View style={styles.qrPlaceholder}>
               <QrCode
                 size={43}
                 color={COLORS.navy}
               />
             </View>
+
+            {/* INFORMACIÓN DEL CÓDIGO */}
             <View style={styles.qrInfo}>
               <Text style={styles.qrTitle}>Código QR</Text>
+
               <Text style={styles.qrDescription}>
                 Escanea para identificar este equipo
               </Text>
+
               <Text style={styles.qrCode}>{equipment.code}</Text>
             </View>
+
+            {/* ACCIÓN PARA CONSULTAR EL CÓDIGO */}
             <View style={styles.qrButton}>
               <Text style={styles.qrButtonText}>Ver QR</Text>
             </View>
@@ -330,6 +383,7 @@ export default function Equipment_Details() {
   );
 }
 
+// Muestra una etiqueta y su valor dentro de los detalles del equipo
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
@@ -345,6 +399,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.navy,
   },
+
   header: {
     minHeight: 58,
     backgroundColor: COLORS.navy,
@@ -353,12 +408,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 5,
   },
+
   headerTitle: {
     flex: 1,
     color: COLORS.textWhite,
     fontWeight: '800',
     fontSize: 24,
   },
+
   headerButton: {
     width: 34,
     height: 42,
@@ -368,19 +425,24 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
   },
+
   contentContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 17,
     borderTopRightRadius: 17,
     overflow: 'hidden',
+    paddingBottom: 30,
   },
+
   content: {
     width: '100%',
     padding: 12,
     paddingBottom: 24,
     gap: 10,
   },
+
+  // GALERÍA DE IMÁGENES
   gallery: {
     height: 205,
     borderRadius: 14,
@@ -390,10 +452,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderDark,
     position: 'relative',
   },
+
   productImage: {
     width: '100%',
     height: '100%',
   },
+
   imageCounter: {
     position: 'absolute',
     top: 9,
@@ -403,11 +467,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+
   counterText: {
     color: COLORS.navy,
     fontSize: 10,
     fontWeight: '700',
   },
+
+  // CONTROLES DEL CARRUSEL
   carouselButton: {
     position: 'absolute',
     top: '43%',
@@ -418,12 +485,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   leftButton: {
     left: 7,
   },
+
   rightButton: {
     right: 7,
   },
+
+  // INDICADORES DE FOTOGRAFÍAS
   pagination: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -431,22 +502,27 @@ const styles = StyleSheet.create({
     gap: 7,
     minHeight: 12,
   },
+
   dot: {
     width: 6,
     height: 6,
     borderRadius: 5,
     backgroundColor: COLORS.infoLight,
   },
+
   activeDot: {
     width: 8,
     height: 8,
     backgroundColor: COLORS.primary,
   },
+
   separator: {
     height: 1,
     backgroundColor: COLORS.borderDark,
     marginVertical: 1,
   },
+
+  // NOMBRE, CÓDIGO Y ESTADO
   productHeading: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,19 +530,24 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 2,
   },
+
   productTitleContainer: {
     flex: 1,
   },
+
   productName: {
     fontSize: 18,
     fontWeight: '800',
     color: COLORS.navy,
   },
+
   productCode: {
     fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
+
+  // ETIQUETAS DE ESTADO
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -476,15 +557,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+
   statusDot: {
     width: 7,
     height: 7,
     borderRadius: 5,
   },
+
   statusText: {
     fontSize: 10,
     fontWeight: '700',
   },
+
+  // TARJETAS DE INFORMACIÓN
   card: {
     backgroundColor: COLORS.textWhite,
     borderRadius: 13,
@@ -492,51 +577,64 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderDark,
     padding: 12,
   },
+
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     paddingBottom: 9,
   },
+
   cardTitle: {
     color: COLORS.navy,
     fontSize: 16,
     fontWeight: '800',
   },
+
   cardSeparator: {
     height: 1,
     backgroundColor: COLORS.border,
     marginBottom: 4,
   },
+
+  // FILAS DE INFORMACIÓN
   infoRow: {
     minHeight: 25,
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   infoLabel: {
     width: '34%',
     color: COLORS.textSecondary,
     fontSize: 12,
   },
+
   infoColon: {
     width: '7%',
     color: COLORS.textSecondary,
     fontSize: 14,
   },
+
   infoValue: {
     flex: 1,
     color: COLORS.text,
     fontSize: 12,
   },
+
   inlineStatus: {
     paddingHorizontal: 8,
     paddingVertical: 5,
   },
+
+  // DESCRIPCIÓN
   description: {
     color: COLORS.textSecondary,
     fontSize: 12,
     lineHeight: 19,
   },
+
+  // TARJETA DE CÓDIGO QR
   qrCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -547,30 +645,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderDark,
   },
+
   qrPlaceholder: {
     width: 46,
     height: 46,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   qrInfo: {
     flex: 1,
     gap: 3,
   },
+
   qrTitle: {
     fontSize: 14,
     color: COLORS.navy,
     fontWeight: '800',
   },
+
   qrDescription: {
     color: COLORS.textSecondary,
     fontSize: 10,
   },
+
   qrCode: {
     color: COLORS.primary,
     fontSize: 10,
     fontWeight: '700',
   },
+
   qrButton: {
     borderWidth: 1,
     borderColor: COLORS.primary,
@@ -578,11 +682,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
+
   qrButtonText: {
     color: COLORS.primary,
     fontSize: 10,
     fontWeight: '700',
   },
+
+  // PANTALLA DE EQUIPO NO ENCONTRADO
   notFoundContainer: {
     flex: 1,
     backgroundColor: COLORS.navy,
@@ -590,6 +697,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 28,
   },
+
   notFoundIcon: {
     width: 100,
     height: 100,
@@ -600,6 +708,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#102B50',
   },
+
   notFoundTitle: {
     marginTop: 24,
     fontSize: 23,
@@ -607,6 +716,7 @@ const styles = StyleSheet.create({
     color: COLORS.textWhite,
     textAlign: 'center',
   },
+
   notFoundDescription: {
     marginTop: 12,
     fontSize: 14,
@@ -614,12 +724,15 @@ const styles = StyleSheet.create({
     color: COLORS.textWhiteSecondary,
     textAlign: 'center',
   },
+
   notFoundCode: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: '800',
     color: COLORS.primary,
   },
+
+  // BOTÓN PARA REGRESAR
   backButton: {
     marginTop: 28,
     minHeight: 48,
@@ -629,11 +742,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   backButtonText: {
     color: COLORS.textWhite,
     fontSize: 14,
     fontWeight: '700',
   },
+
+  // ESTADOS DE INTERACCIÓN
   buttonPressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],

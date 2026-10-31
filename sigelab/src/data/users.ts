@@ -13,7 +13,7 @@ export type AppUser = {
 export const USERS: AppUser[] = [
   {
     id: '1',
-    username: '1',
+    username: 'admin',
     password: '1',
     fullName: 'Ana',
     email: 'admin@sigelab.edu.gt',

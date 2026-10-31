@@ -18,21 +18,32 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Scanner() {
+  // Controla los permisos de acceso a la cámara.
   const [permission, requestPermission] = useCameraPermissions();
+  // Indica si la cámara terminó de inicializarse.
   const [cameraReady, setCameraReady] = useState(false);
+  // Controla el encendido y apagado de la linterna.
   const [torchEnabled, setTorchEnabled] = useState(false);
+  // Almacena los errores encontrados durante el escaneo.
   const [scanError, setScanError] = useState<string | null>(null);
+  // Indica si el escáner está buscando códigos QR.
   const [scanning, setScanning] = useState(true);
+  // Evita procesar varias veces el mismo código QR.
   const scannedRef = useRef(false);
+  // Controla el valor de la animación de la línea de escaneo.
   const scanLine = useRef(new Animated.Value(0)).current;
+  // Obtiene la altura disponible de la pantalla.
   const { height: screenHeight } = useWindowDimensions();
+
   useFocusEffect(
     useCallback(() => {
+      // Restablece los estados al entrar nuevamente al escáner.
       scannedRef.current = false;
       setScanning(true);
       setCameraReady(false);
       setTorchEnabled(false);
 
+      // Evita procesar códigos cuando se abandona la pantalla.
       return () => {
         scannedRef.current = true;
       };
@@ -40,12 +51,15 @@ export default function Scanner() {
   );
 
   useEffect(() => {
+    // Detiene la animación si el escáner no está activo
+    // o la cámara todavía no está preparada.
     if (!scanning || !cameraReady) {
       scanLine.stopAnimation();
       scanLine.setValue(0);
       return;
     }
 
+    // Crea una animación continua de arriba hacia abajo.
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(scanLine, {
@@ -65,6 +79,7 @@ export default function Scanner() {
 
     animation.start();
 
+    // Limpia la animación cuando cambian sus dependencias.
     return () => {
       animation.stop();
       scanLine.stopAnimation();
@@ -72,7 +87,10 @@ export default function Scanner() {
   }, [scanLine, scanning, cameraReady]);
 
   const enableCamera = useCallback(async () => {
+    // Solicita autorización para utilizar la cámara.
     const result = await requestPermission();
+
+    // Si el permiso es rechazado, muestra el mensaje correspondiente.
     if (!result.granted) {
       Alert.alert(
         'Permiso de cámara',
@@ -84,25 +102,36 @@ export default function Scanner() {
   }, [requestPermission]);
 
   const retryScan = useCallback(() => {
+    // Permite procesar un nuevo código QR.
     scannedRef.current = false;
+
+    // Limpia los errores anteriores y reactiva el escáner.
     setScanError(null);
     setScanning(true);
   }, []);
 
   const handleScan = useCallback(
     ({ data }: { data: string }) => {
+      // Evita procesar códigos repetidos o escaneos inactivos.
       if (scannedRef.current || !scanning) return;
+
+      // Bloquea nuevas lecturas mientras se procesa el resultado.
       scannedRef.current = true;
       setScanning(false);
       setTorchEnabled(false);
 
+      // Obtiene el contenido del código QR.
       const rawData = data.trim();
       let equipmentId = rawData;
+
       try {
+        // Intenta interpretar el contenido como JSON.
         const parsed: unknown = JSON.parse(rawData);
 
         if (typeof parsed === 'object' && parsed !== null) {
           const qrObject = parsed as Record<string, unknown>;
+
+          // Busca el identificador en las propiedades disponibles.
           const value = qrObject.equipmentId ?? qrObject.id ?? qrObject.code;
 
           if (typeof value === 'string' || typeof value === 'number') {
@@ -110,23 +139,30 @@ export default function Scanner() {
           }
         }
       } catch {}
+
+      // Normaliza el identificador para evitar diferencias de escritura
       const normalizedId = equipmentId.toLowerCase();
+
+      // Busca coincidencias por ID o código de inventario.
       const equipment = equipmentData.find((item) => {
         const itemId = String(item.id ?? '')
           .trim()
           .toLowerCase();
-
         const itemCode = String(item.code ?? '')
           .trim()
           .toLowerCase();
+
         return itemId === normalizedId || itemCode === normalizedId;
       });
 
+      // Si el equipo no existe, muestra el mensaje de error.
       if (!equipment) {
         setScanError('Equipo no existe');
         setScanning(false);
         return;
       }
+
+      // Envía el identificador del equipo a la pantalla de detalles.
       router.push({
         pathname: '/equipment_details',
         params: {
@@ -137,6 +173,7 @@ export default function Scanner() {
     [scanning, retryScan],
   );
 
+  // Muestra una pantalla de carga mientras se consultan los permisos.
   if (!permission) {
     return (
       <View style={styles.loading}>
@@ -144,6 +181,7 @@ export default function Scanner() {
           size='large'
           color={COLORS.primary}
         />
+
         <Text style={styles.loadingText}>Preparando cámara...</Text>
       </View>
     );
@@ -167,12 +205,16 @@ export default function Scanner() {
             />
           </Pressable>
         </View>
+
+        {/* TÍTULO Y DESCRIPCIÓN */}
         <Text style={styles.title}>Escanear código QR</Text>
         <Text style={styles.description}>
           Apunta la cámara al código QR del equipo
           {'\n'}
           para ver más información.
         </Text>
+
+        {/* INFORMACIÓN SOBRE LOS PERMISOS */}
         <View style={styles.cameraSection}>
           <View
             style={[
@@ -185,11 +227,11 @@ export default function Scanner() {
               color={COLORS.textWhite}
               strokeWidth={2.5}
             />
-
             <Text style={styles.permissionText}>
               Necesitamos acceso a tu cámara
             </Text>
 
+            {/* BOTÓN PARA SOLICITAR PERMISO */}
             {permission.canAskAgain ? (
               <Pressable
                 style={({ pressed }) => [
@@ -201,6 +243,7 @@ export default function Scanner() {
                 <Text style={styles.allowText}>Activar cámara</Text>
               </Pressable>
             ) : (
+              // Instrucciones cuando el permiso ya no puede solicitarse.
               <Text style={styles.permissionHint}>
                 Habilita el permiso de cámara desde los ajustes de tu teléfono y
                 vuelve a intentarlo.
@@ -208,6 +251,8 @@ export default function Scanner() {
             )}
           </View>
         </View>
+
+        {/* BOTÓN PARA CANCELAR */}
         <Pressable
           style={({ pressed }) => [
             styles.cancelButton,
@@ -244,6 +289,7 @@ export default function Scanner() {
         {'\n'}
         para ver más información.
       </Text>
+
       <View style={styles.cameraSection}>
         <View style={styles.frame}>
           <CameraView
@@ -256,12 +302,15 @@ export default function Scanner() {
               barcodeTypes: ['qr'],
             }}
           />
+
+          {/* INICIALIZACIÓN DE LA CÁMARA */}
           {!cameraReady && (
             <View style={styles.cameraLoading}>
               <ActivityIndicator
                 size='large'
                 color={COLORS.textWhite}
               />
+
               <Text style={styles.loadingText}>Iniciando cámara...</Text>
             </View>
           )}
@@ -269,10 +318,13 @@ export default function Scanner() {
             pointerEvents='none'
             style={styles.frameOverlay}
           >
+            {/* ESQUINAS DEL ÁREA DE ESCANEO */}
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
+
+            {/* ANIMACIÓN DE LA LÍNEA DE ESCANEO */}
             {scanning && cameraReady && (
               <Animated.View
                 style={[
@@ -290,18 +342,22 @@ export default function Scanner() {
                 ]}
               />
             )}
+
+            {/* INDICADOR VISUAL DE CÓDIGO DETECTADO */}
             {!scanning && (
               <View style={styles.detectedOverlay}>
                 <QrCode
                   size={46}
                   color={COLORS.textWhite}
                 />
+
                 <Text style={styles.detectedText}>Código detectado</Text>
               </View>
             )}
           </View>
         </View>
       </View>
+      {/* ESCANER*/}
       <Text style={[styles.hint, scanError !== null && styles.errorHint]}>
         {scanError
           ? scanError
@@ -312,6 +368,7 @@ export default function Scanner() {
               : 'Código detectado'}
       </Text>
       <View style={styles.actions}>
+        {/* BOTÓN PARA VOLVER A ESCANEAR */}
         {!scanning && (
           <Pressable
             style={({ pressed }) => [
@@ -323,6 +380,8 @@ export default function Scanner() {
             <Text style={styles.retryText}>Escanear de nuevo</Text>
           </Pressable>
         )}
+
+        {/* BOTÓN PARA ACTIVAR O DESACTIVAR LA LINTERNA */}
         <Pressable
           style={({ pressed }) => [
             styles.flashButton,
@@ -340,6 +399,7 @@ export default function Scanner() {
           />
         </Pressable>
       </View>
+      {/* BOTÓN CANCELAR*/}
       <Pressable
         style={({ pressed }) => [
           styles.cancelButton,
@@ -361,21 +421,28 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 40,
   },
+
+  // PANTALLA DE CARGA
   loading: {
     flex: 1,
     backgroundColor: COLORS.navy,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   loadingText: {
     color: COLORS.textWhite,
     fontSize: 14,
   },
+
+  // ENCABEZADO
   topBar: {
     height: 42,
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
+
+  // TÍTULO Y DESCRIPCIÓN
   title: {
     marginTop: 34,
     textAlign: 'center',
@@ -383,6 +450,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '500',
   },
+
   description: {
     marginTop: 20,
     textAlign: 'center',
@@ -391,26 +459,27 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     fontWeight: '400',
   },
+
+  // ÁREA DE LA CÁMARA
   cameraSection: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 260,
-  },
-  permissionBox: {
-    width: '100%',
-    maxWidth: 300,
-    minHeight: 350,
+    paddingVertical: 20,
     flexGrow: 0,
+    flexShrink: 0,
+  },
+
+  // CONTENEDOR DE PERMISOS
+  permissionBox: {
     borderRadius: 26,
     borderWidth: 2,
     borderColor: COLORS.primaryDark,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    aspectRatio: 1,
+    padding: 18,
     gap: 18,
   },
+
   permissionText: {
     color: COLORS.textWhite,
     textAlign: 'center',
@@ -419,12 +488,15 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     maxWidth: 310,
   },
+
   permissionHint: {
     color: COLORS.textWhiteSecondary,
     textAlign: 'center',
     fontSize: 14,
     lineHeight: 21,
   },
+
+  // BOTÓN PARA ACTIVAR LA CÁMARA
   allowButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 12,
@@ -433,10 +505,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     borderWidth: 1,
   },
+
   allowText: {
     color: COLORS.textWhite,
     fontWeight: '500',
   },
+
+  // MARCO PRINCIPAL DEL ESCÁNER
   frame: {
     width: '100%',
     maxWidth: 300,
@@ -451,14 +526,19 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 10,
   },
+
+  // CARGA DE LA CÁMARA
   cameraLoading: {
     position: 'absolute',
     alignSelf: 'center',
     top: '45%',
   },
+
   frameOverlay: {
     ...StyleSheet.absoluteFill,
   },
+
+  // ESQUINAS DEL ÁREA DE ESCANEO
   corner: {
     position: 'absolute',
     width: 40,
@@ -467,6 +547,7 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     borderRadius: 1,
   },
+
   topLeft: {
     top: 0,
     left: 0,
@@ -474,6 +555,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderTopLeftRadius: 22,
   },
+
   topRight: {
     top: 0,
     right: 0,
@@ -481,6 +563,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderTopRightRadius: 22,
   },
+
   bottomLeft: {
     bottom: 0,
     left: 0,
@@ -488,6 +571,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomLeftRadius: 22,
   },
+
   bottomRight: {
     bottom: 0,
     right: 0,
@@ -495,6 +579,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomRightRadius: 22,
   },
+
+  // ANIMACIÓN DE LA LÍNEA DE ESCANEO
   scanLine: {
     position: 'absolute',
     top: 20,
@@ -507,6 +593,8 @@ const styles = StyleSheet.create({
     shadowRadius: 9,
     elevation: 8,
   },
+
+  // SUPERPOSICIÓN AL DETECTAR UN CÓDIGO
   detectedOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(6, 26, 53, 0.78)',
@@ -514,22 +602,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
+
   detectedText: {
     color: COLORS.textWhite,
     fontSize: 18,
     fontWeight: '600',
   },
+
+  // MENSAJES DE ESTADO
   hint: {
     color: COLORS.textWhiteSecondary,
     textAlign: 'center',
     fontSize: 14,
     marginBottom: 16,
   },
+
   errorHint: {
     color: COLORS.error,
     fontSize: 16,
     fontWeight: '600',
   },
+
+  // CONTENEDOR DE ACCIONES
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -537,6 +631,8 @@ const styles = StyleSheet.create({
     gap: 18,
     marginBottom: 20,
   },
+
+  // BOTÓN DE LINTERNA
   flashButton: {
     width: 56,
     height: 56,
@@ -546,10 +642,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   flashButtonActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+
+  // BOTÓN PARA REPETIR EL ESCANEO
   retryButton: {
     paddingHorizontal: 22,
     height: 50,
@@ -558,11 +657,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   retryText: {
     color: COLORS.textWhite,
     fontSize: 14,
     fontWeight: '600',
   },
+
+  // BOTÓN PARA CANCELAR
   cancelButton: {
     width: '100%',
     height: 54,
@@ -578,11 +680,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
+
   cancelText: {
     color: COLORS.textWhite,
     fontSize: 16,
     fontWeight: '700',
   },
+
+  // ESTADOS DE INTERACCIÓN
   buttonPressed: {
     opacity: 0.82,
     transform: [{ scale: 0.98 }],

@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 
 export default function Login() {
+  // Estados para controlar los campos y la interfaz
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -34,27 +35,32 @@ export default function Login() {
 
     setErrorMessage('');
 
+    // Validar que los campos no estén vacíos
     if (!cleanUsername || !password) {
       setErrorMessage('Ingresa tu usuario y contraseña.');
       return;
     }
 
+    // Buscar usuario y verificar
     const user = USERS.find(
       (item) =>
         item.username.toLowerCase() === cleanUsername &&
         item.password === password,
     );
 
+    // Validar las credenciales
     if (!user) {
       setErrorMessage('Usuario o contraseña incorrectos.');
       return;
     }
 
+    // Verificar que la cuenta esté activa
     if (!user.active) {
       setErrorMessage('Tu cuenta está inactiva. Contacta al administrador.');
       return;
     }
 
+    // Guardar sesión y redirigir al Dashboard
     setCurrentUser(user);
     router.replace('/tabs/dashboard');
   };
@@ -70,7 +76,7 @@ export default function Login() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Logo */}
+          {/* LOGOTIPO */}
           <View style={styles.header}>
             <FlaskConical
               size={64}
@@ -86,9 +92,9 @@ export default function Login() {
             <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
           </View>
 
-          {/* Form */}
+          {/* FORMULARIO */}
           <View style={styles.form}>
-            {/* User */}
+            {/* CAMPO DE USUARIO */}
             <View style={styles.field}>
               <Text style={styles.label}>Usuario</Text>
 
@@ -114,7 +120,7 @@ export default function Login() {
               </View>
             </View>
 
-            {/* Password */}
+            {/* CAMPO DE CONTRASEÑA */}
             <View style={styles.field}>
               <Text style={styles.label}>Contraseña</Text>
 
@@ -140,6 +146,7 @@ export default function Login() {
                   onSubmitEditing={handleLogin}
                 />
 
+                {/* BOTÓN PARA MOSTRAR U OCULTAR CONTRASEÑA */}
                 <Pressable
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={10}
@@ -162,6 +169,8 @@ export default function Login() {
                 </Pressable>
               </View>
             </View>
+
+            {/* MENSAJES DE ERROR */}
             {errorMessage !== '' && (
               <View style={styles.errorContainer}>
                 <AlertCircle
@@ -171,7 +180,8 @@ export default function Login() {
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             )}
-            {/* Login Button */}
+
+            {/* BOTÓN DE INICIO DE SESIÓN */}
             <Pressable
               style={({ pressed }) => [
                 styles.loginButton,
@@ -182,14 +192,14 @@ export default function Login() {
               <Text style={styles.loginButtonText}>Iniciar sesión</Text>
             </Pressable>
 
-            {/* Line */}
+            {/* SEPARADOR */}
             <View style={styles.separator}>
               <View style={styles.separatorLine} />
               <Text style={styles.separatorText}>o</Text>
               <View style={styles.separatorLine} />
             </View>
 
-            {/* Face ID */}
+            {/* RECONOCIMIENTO FACIAL */}
             <Pressable
               style={({ pressed }) => [
                 styles.faceButton,
@@ -208,7 +218,7 @@ export default function Login() {
             </Pressable>
           </View>
 
-          {/* Version */}
+          {/* VERSIÓN DE LA APLICACIÓN */}
           <Text style={styles.version}>
             <Text style={styles.company}>SIGELAB</Text>
             <Text style={styles.versionV}> v1.0</Text>
@@ -232,24 +242,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
+  // LOGOTIPO
   header: {
     alignItems: 'center',
   },
-
   logoText: {
     marginTop: 5,
     fontSize: 30,
     fontWeight: '700',
   },
-
   logoSIGE: {
     color: COLORS.primaryDark,
   },
-
   logoLAB: {
     color: COLORS.navyLight,
   },
-
   subtitle: {
     marginTop: 26,
     fontSize: 15,
@@ -257,14 +264,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
+  // FORMULARIO Y CAMPOS DE ENTRADA
   form: {
     width: '100%',
   },
-
   field: {
     marginBottom: 25,
   },
-
   label: {
     marginBottom: 9,
     color: COLORS.navy,
@@ -272,6 +278,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
+  // ESTILOS DEL CAMPO DE USUARIO
   inputContainer: {
     height: 48,
     flexDirection: 'row',
@@ -283,7 +290,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundInput,
     borderColor: COLORS.border,
   },
-
   input: {
     flex: 1,
     height: '100%',
@@ -293,6 +299,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
+  // ESTILOS DEL CAMPO DE CONTRASEÑA
   passwordContainer: {
     height: 48,
     flexDirection: 'row',
@@ -304,7 +311,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundInput,
     borderColor: COLORS.border,
   },
-
   passwordInput: {
     flex: 1,
     height: '100%',
@@ -313,6 +319,8 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontWeight: '500',
   },
+
+  // MENSAJES DE ERROR
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -325,7 +333,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FECACA',
   },
-
   errorText: {
     flex: 1,
     color: '#B91C1C',
@@ -334,6 +341,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
 
+  // BOTÓN PRINCIPAL
   loginButton: {
     width: '100%',
     height: 54,
@@ -352,37 +360,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
-
   buttonPressed: {
     opacity: 0.82,
     transform: [{ scale: 0.98 }],
   },
-
   loginButtonText: {
     color: COLORS.textWhite,
     fontSize: 16,
     fontWeight: '700',
   },
 
+  // SEPARADOR VISUAL
   separator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 15,
     marginVertical: 25,
   },
-
   separatorLine: {
     flex: 1,
     height: 1.5,
     backgroundColor: COLORS.borderDark,
   },
-
   separatorText: {
     fontSize: 14,
     fontWeight: '500',
     color: COLORS.textSecondary,
   },
 
+  // BOTÓN DE RECONOCIMIENTO FACIAL
   faceButton: {
     minHeight: 53,
     flexDirection: 'row',
@@ -394,23 +400,21 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: 'rgba(255,255,255,0.7)',
   },
-
   faceButtonText: {
     fontWeight: '600',
     fontSize: 14,
     color: COLORS.primary,
   },
 
+  // PIE DE PANTALLA Y VERSIÓN
   version: {
     fontWeight: '500',
     textAlign: 'center',
     fontSize: 11,
   },
-
   company: {
     color: COLORS.navy,
   },
-
   versionV: {
     color: COLORS.textTertiary,
   },

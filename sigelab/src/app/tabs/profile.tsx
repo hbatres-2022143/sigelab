@@ -1,4 +1,5 @@
 import { COLORS } from '@/constants/colors';
+import { registerBiometricUser } from '@/data/biometric';
 import { getCurrentUser, setCurrentUser } from '@/data/session';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -20,6 +21,7 @@ import {
   View,
 } from 'react-native';
 
+// Convierte los roles internos en nombres visibles.
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
   ENCARGADO: 'Encargado de laboratorio',
@@ -28,22 +30,27 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function Profile() {
   const [user, setUser] = useState(getCurrentUser());
-
+  // ACTUALIZACIÓN DE SESIÓN AL ABRIR LA PANTALLA
+  // Recupera los datos más recientes del usuario.
   useFocusEffect(
     useCallback(() => {
       setUser(getCurrentUser());
     }, []),
   );
 
+  // CERRAR SESIÓN
+  // Solicita confirmación, limpia la sesión y vuelve al login.
   const handleLogout = () => {
     Alert.alert(
       'Cerrar sesión',
       '¿Estás seguro de que deseas salir de SIGELAB?',
+
       [
         {
           text: 'Cancelar',
           style: 'cancel',
         },
+
         {
           text: 'Cerrar sesión',
           style: 'destructive',
@@ -56,6 +63,23 @@ export default function Profile() {
     );
   };
 
+  // REGISTRO BIOMÉTRICO
+  // Ejecuta el registro facial y muestra el resultado.
+  const handleRegisterBiometric = async () => {
+    try {
+      const result = await registerBiometricUser();
+      Alert.alert(
+        result.success ? 'Registro exitoso' : 'No se pudo registrar',
+        result.message,
+      );
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'No se pudo completar el registro biométrico.');
+    }
+  };
+
+  // INICIALES DEL USUARIO
+  // Genera las iniciales que se muestran en el avatar.
   const initials =
     user?.fullName
       ?.split(' ')
@@ -70,6 +94,7 @@ export default function Profile() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
+      {/* ENCABEZADO Y LOGOTIPO DE SIGELAB */}
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <FlaskConical
@@ -83,22 +108,22 @@ export default function Profile() {
             <Text style={styles.logoLAB}>LAB</Text>
           </Text>
         </View>
-
         <Text style={styles.title}>Mi perfil</Text>
         <Text style={styles.subtitle}>Administra tu cuenta</Text>
       </View>
-
+      {/* CONTENIDO SEGÚN EL ESTADO DE LA SESIÓN */}
       {!user ? (
         <View style={styles.card}>
           <Text style={styles.name}>Sesión no iniciada</Text>
+
           <Text style={styles.muted}>
             Inicia sesión para consultar tu perfil y acceder a la información de
             tu cuenta.
           </Text>
-
           <Pressable
             style={({ pressed }) => [
               styles.primaryButton,
+
               pressed && styles.primaryPressed,
             ]}
             onPress={() => router.replace('/login')}
@@ -109,12 +134,14 @@ export default function Profile() {
         </View>
       ) : (
         <>
+          {/* AVATAR, NOMBRE, ROL Y ESTADO */}
           <View style={styles.profileCard}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{initials}</Text>
             </View>
 
             <Text style={styles.name}>{user.fullName}</Text>
+
             <Text style={styles.username}>@{user.username}</Text>
 
             <View style={styles.badgesRow}>
@@ -123,6 +150,7 @@ export default function Profile() {
                   size={15}
                   color={COLORS.primary}
                 />
+
                 <Text style={styles.roleText}>
                   {ROLE_LABELS[user.role] ?? user.role}
                 </Text>
@@ -130,11 +158,15 @@ export default function Profile() {
 
               <View style={styles.status}>
                 <View style={styles.statusDot} />
+
                 <Text style={styles.statusText}>Cuenta activa</Text>
               </View>
             </View>
           </View>
+
+          {/* INFORMACIÓN PERSONAL DEL USUARIO */}
           <Text style={styles.sectionTitle}>Información personal</Text>
+
           <View style={styles.card}>
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
@@ -143,12 +175,16 @@ export default function Profile() {
                   color={COLORS.primary}
                 />
               </View>
+
               <View style={styles.infoText}>
                 <Text style={styles.label}>Nombre completo</Text>
+
                 <Text style={styles.value}>{user.fullName}</Text>
               </View>
             </View>
+
             <View style={styles.divider} />
+
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
                 <Mail
@@ -156,12 +192,16 @@ export default function Profile() {
                   color={COLORS.primary}
                 />
               </View>
+
               <View style={styles.infoText}>
                 <Text style={styles.label}>Correo electrónico</Text>
+
                 <Text style={styles.value}>{user.email}</Text>
               </View>
             </View>
+
             <View style={styles.divider} />
+
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
                 <ShieldCheck
@@ -169,15 +209,55 @@ export default function Profile() {
                   color={COLORS.primary}
                 />
               </View>
+
               <View style={styles.infoText}>
                 <Text style={styles.label}>Rol del sistema</Text>
+
                 <Text style={styles.value}>
                   {ROLE_LABELS[user.role] ?? user.role}
                 </Text>
               </View>
             </View>
           </View>
+
+          {/* SEGURIDAD Y REGISTRO DE RECONOCIMIENTO FACIAL */}
+          <Text style={styles.sectionTitle}>Seguridad</Text>
+
+          <View style={styles.card}>
+            <View style={styles.infoRow}>
+              <View style={styles.iconBox}>
+                <ShieldCheck
+                  size={20}
+                  color={COLORS.primary}
+                />
+              </View>
+
+              <View style={styles.infoText}>
+                <Text style={styles.value}>Acceso biométrico</Text>
+
+                <Text style={styles.label}>
+                  Registra tu biometría para iniciar sesión sin contraseña.
+                </Text>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={handleRegisterBiometric}
+              style={({ pressed }) => [
+                styles.primaryButton,
+
+                pressed && styles.primaryPressed,
+              ]}
+            >
+              <Text style={styles.primaryButtonText}>
+                Registrar reconocimiento facial
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* INFORMACIÓN Y VERSIÓN DE LA APLICACIÓN */}
           <Text style={styles.sectionTitle}>Aplicación</Text>
+
           <View style={styles.card}>
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
@@ -186,19 +266,24 @@ export default function Profile() {
                   color={COLORS.primary}
                 />
               </View>
+
               <View style={styles.infoText}>
                 <Text style={styles.value}>SIGELAB Móvil</Text>
+
                 <Text style={styles.label}>
                   Sistema de gestión de laboratorios
                 </Text>
               </View>
+
               <Text style={styles.version}>v1.0</Text>
             </View>
           </View>
+
           <Pressable
             onPress={handleLogout}
             style={({ pressed }) => [
               styles.logoutButton,
+
               pressed && styles.pressed,
             ]}
             accessibilityRole='button'
@@ -214,6 +299,8 @@ export default function Profile() {
               style={styles.logoutArrow}
             />
           </Pressable>
+
+          {/* PIE DE PANTALLA */}
           <Text style={styles.footer}>
             <FlaskConical
               size={16}
@@ -271,6 +358,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
   },
+  // TARJETA DE PERFIL Y AVATAR
   profileCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 22,
@@ -312,6 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 5,
   },
+  // ETIQUETAS DE ROL Y ESTADO DE CUENTA
   badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -356,6 +445,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  // TÍTULOS Y TARJETAS DE SECCIÓN
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
@@ -371,6 +461,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginBottom: 25,
   },
+  // FILAS DE INFORMACIÓN, ICONOS Y TEXTOS
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -403,6 +494,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.divider,
     marginLeft: 54,
   },
+  // VERSIÓN Y ELEMENTOS PARA CERRAR SESIÓN
   version: {
     color: COLORS.textTertiary,
     fontSize: 12,
@@ -428,11 +520,13 @@ const styles = StyleSheet.create({
   logoutArrow: {
     marginLeft: 'auto',
   },
+  // ESTADOS VISUALES DE LOS BOTONES
   pressed: {
     backgroundColor: COLORS.errorLight,
     opacity: 0.75,
     transform: [{ scale: 0.99 }],
   },
+  // BOTÓN PRINCIPAL Y TEXTO
   primaryButton: {
     width: '100%',
     minHeight: 52,
@@ -455,6 +549,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
+  // MENSAJES SECUNDARIOS Y PIE DE PANTALLA
   muted: {
     color: COLORS.textSecondary,
     fontSize: 14,

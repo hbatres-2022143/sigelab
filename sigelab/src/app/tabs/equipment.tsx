@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+// Categorías disponibles para filtrar los equipos.
 const categories = [
   'Todos',
   'Cámara',
@@ -36,8 +36,11 @@ const categories = [
   'Monitor',
   'Kit electrónico',
 ] as const;
+
+// Tipo de dato para las categorías seleccionables.
 type CategoryFilter = (typeof categories)[number];
 
+// Estados disponibles para filtrar el inventario.
 const statuses: Array<'Todos' | EquipmentStatus> = [
   'Todos',
   'Disponible',
@@ -46,6 +49,7 @@ const statuses: Array<'Todos' | EquipmentStatus> = [
   'En mantenimiento',
 ];
 
+// Obtiene los colores correspondientes al estado del equipo.
 function getStatusStyle(status: EquipmentStatus) {
   switch (status) {
     case 'Disponible':
@@ -53,16 +57,19 @@ function getStatusStyle(status: EquipmentStatus) {
         backgroundColor: COLORS.successLight,
         color: COLORS.success,
       };
+
     case 'En préstamo':
       return {
         backgroundColor: COLORS.primaryLight,
         color: COLORS.primary,
       };
+
     case 'Dañado':
       return {
         backgroundColor: COLORS.errorLight,
         color: COLORS.error,
       };
+
     case 'En mantenimiento':
       return {
         backgroundColor: COLORS.warningLight,
@@ -71,6 +78,8 @@ function getStatusStyle(status: EquipmentStatus) {
   }
 }
 
+// Muestra la información principal de cada equipo,
+// incluyendo imagen, nombre, código y estado actual.
 function EquipmentCard({
   item,
   selected,
@@ -80,8 +89,8 @@ function EquipmentCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  // Obtiene los colores según el estado del equipo.
   const statusStyle = getStatusStyle(item.status);
-
   return (
     <Pressable
       onPress={onPress}
@@ -91,6 +100,7 @@ function EquipmentCard({
         pressed && styles.cardPressed,
       ]}
     >
+      {/* IMAGEN DEL EQUIPO */}
       <View style={styles.equipmentImage}>
         <Image
           source={item.image}
@@ -99,6 +109,8 @@ function EquipmentCard({
           accessibilityLabel={item.name}
         />
       </View>
+
+      {/* INFORMACIÓN DEL EQUIPO */}
       <View style={styles.equipmentInfo}>
         <Text
           style={styles.equipmentName}
@@ -106,9 +118,8 @@ function EquipmentCard({
         >
           {item.name}
         </Text>
-
         <Text style={styles.equipmentCode}>{item.code}</Text>
-
+        {/* INDICADOR DEL ESTADO */}
         <View
           style={[
             styles.statusBadge,
@@ -120,6 +131,8 @@ function EquipmentCard({
           </Text>
         </View>
       </View>
+
+      {/* ICONO DE NAVEGACIÓN */}
       <ChevronRight
         size={21}
         color={COLORS.icon}
@@ -127,36 +140,46 @@ function EquipmentCard({
     </Pressable>
   );
 }
-
 export default function Devices() {
+  // Controla el texto ingresado en el buscador.
   const [searchText, setSearchText] = useState('');
+
+  // Categoría seleccionada para filtrar los equipos.
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryFilter>('Todos');
+
+  // Estado seleccionado para filtrar el inventario.
   const [selectedStatus, setSelectedStatus] = useState<
     'Todos' | EquipmentStatus
   >('Todos');
+
+  // Controla la visibilidad del panel de filtros.
   const [showFilters, setShowFilters] = useState(false);
+
+  // Almacena el identificador del equipo seleccionado.
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string | null>(
     null,
   );
-
+  // Filtra los equipos según el texto de búsqueda,
+  // la categoría y el estado seleccionado.
+  // useMemo evita recalcular la lista si no cambian los filtros.
   const filteredEquipment = useMemo(() => {
     const query = searchText.trim().toLowerCase();
-
     return equipmentData.filter((item) => {
+      // Busca coincidencias por nombre, código o ID.
       const matchesSearch =
         !query ||
         item.name.toLowerCase().includes(query) ||
         item.code.toLowerCase().includes(query) ||
         item.id.toLowerCase().includes(query);
-
+      // Comprueba si el equipo pertenece a la categoría seleccionada.
       const matchesCategory =
         selectedCategory === 'Todos' ||
         item.category === (selectedCategory as EquipmentCategory);
-
+      // Comprueba si coincide con el estado seleccionado.
       const matchesStatus =
         selectedStatus == 'Todos' || item.status === selectedStatus;
-
+      // Devuelve únicamente los equipos que cumplen los filtros.
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [searchText, selectedCategory, selectedStatus]);
@@ -166,24 +189,31 @@ export default function Devices() {
       style={styles.safeArea}
       edges={['top']}
     >
+      {/* ENCABEZADO DE LA PANTALLA */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Equipos</Text>
+
         <Text style={styles.headerSubtitle}>
           Consulta el inventario del laboratorio
         </Text>
       </View>
+
+      {/* CONTENIDO PRINCIPAL DEL INVENTARIO */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps='handled'
         showsHorizontalScrollIndicator={false}
       >
+        {/* BUSCADOR Y BOTÓN DE FILTROS */}
         <View style={styles.searchRow}>
+          {/* CAMPO DE BÚSQUEDA */}
           <View style={styles.searchBox}>
             <Search
               size={18}
               color={COLORS.textPrimary}
             />
+
             <TextInput
               style={styles.searchInput}
               value={searchText}
@@ -196,6 +226,7 @@ export default function Devices() {
               accessibilityLabel='Buscar equipos'
             />
 
+            {/* BOTÓN PARA LIMPIAR LA BÚSQUEDA */}
             {searchText.length > 0 && (
               <Pressable
                 onPress={() => setSearchText('')}
@@ -210,6 +241,7 @@ export default function Devices() {
             )}
           </View>
 
+          {/* BOTÓN PARA MOSTRAR U OCULTAR FILTROS */}
           <Pressable
             style={[
               styles.filterButton,
@@ -231,6 +263,8 @@ export default function Devices() {
             )}
           </Pressable>
         </View>
+
+        {/* FILTROS POR CATEGORÍA */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -260,10 +294,14 @@ export default function Devices() {
             );
           })}
         </ScrollView>
+
+        {/* PANEL DE FILTROS POR ESTADO */}
         {showFilters && (
           <View style={styles.filterPanel}>
+            {/* ENCABEZADO Y RESTABLECIMIENTO DE FILTROS */}
             <View style={styles.filterPanelHeader}>
               <Text style={styles.filterPanelTitle}>Filtrar por estado</Text>
+
               <Pressable
                 onPress={() => {
                   setSelectedStatus('Todos');
@@ -274,9 +312,12 @@ export default function Devices() {
                 <Text style={styles.clearFilters}>Limpiar</Text>
               </Pressable>
             </View>
+
+            {/* OPCIONES DE ESTADO */}
             <View style={styles.statusFilters}>
               {statuses.map((status) => {
                 const active = selectedStatus === status;
+
                 return (
                   <Pressable
                     key={status}
@@ -301,13 +342,17 @@ export default function Devices() {
           </View>
         )}
 
+        {/* ENCABEZADO Y CONTADOR DE RESULTADOS */}
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsTitle}>Inventario</Text>
+
           <Text style={styles.resultsCount}>
             {filteredEquipment.length}{' '}
             {filteredEquipment.length === 1 ? 'equipo' : 'equipos'}
           </Text>
         </View>
+
+        {/* LISTADO DE EQUIPOS */}
         <View style={styles.equipmentList}>
           {filteredEquipment.map((item) => (
             <EquipmentCard
@@ -315,6 +360,7 @@ export default function Devices() {
               item={item}
               selected={selectedEquipmentId === item.id}
               onPress={() => {
+                // Navega al detalle del equipo seleccionado.
                 router.push({
                   pathname: '/equipment_details',
                   params: { id: item.id },
@@ -323,16 +369,23 @@ export default function Devices() {
             />
           ))}
         </View>
+
+        {/* ESTADO VACÍO CUANDO NO EXISTEN RESULTADOS */}
         {filteredEquipment.length === 0 && (
           <View style={styles.emptyState}>
+            {/* ICONO INFORMATIVO */}
             <Search
               size={55}
               color={COLORS.textTertiary}
             />
+
             <Text style={styles.emptyTitle}>No encontramos equipos</Text>
+
             <Text style={styles.emptyDescription}>
               Prueba con otro nombre, código o filtro.
             </Text>
+
+            {/* BOTÓN PARA RESTABLECER LA BÚSQUEDA */}
             <Pressable
               onPress={() => {
                 setSearchText('');
@@ -351,44 +404,50 @@ export default function Devices() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.navy,
   },
+
   header: {
     backgroundColor: COLORS.navy,
     paddingHorizontal: 30,
     paddingTop: 8,
     paddingBottom: 40,
   },
+
   headerTitle: {
     color: COLORS.textWhite,
     fontWeight: '800',
     fontSize: 24,
   },
+
   headerSubtitle: {
     marginTop: 4,
     color: COLORS.textWhiteSecondary,
     fontSize: 14,
   },
+
   content: {
     flex: 1,
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 17,
     borderTopRightRadius: 17,
   },
+
   contentContainer: {
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 22,
   },
-  // Search
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+
   searchBox: {
     flex: 1,
     height: 42,
@@ -401,6 +460,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderDark,
     borderRadius: 24,
   },
+
   searchInput: {
     flex: 1,
     minWidth: 0,
@@ -409,6 +469,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 12,
   },
+
   filterButton: {
     width: 40,
     height: 40,
@@ -417,16 +478,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.filter,
     borderRadius: 20,
   },
+
   filterButtonActive: {
     backgroundColor: COLORS.primaryLight,
   },
 
-  // Categories
   categoryList: {
     gap: 6,
     paddingTop: 10,
     paddingBottom: 12,
   },
+
   categoryChip: {
     minHeight: 30,
     justifyContent: 'center',
@@ -434,19 +496,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.filter,
     borderRadius: 18,
   },
+
   categoryChipActive: {
     backgroundColor: COLORS.primary,
   },
+
   categoryText: {
     color: COLORS.navy,
     fontWeight: '400',
     fontSize: 10,
   },
+
   categoryTextActive: {
     color: COLORS.textWhite,
   },
 
-  // Filters
   filterPanel: {
     marginBottom: 12,
     padding: 12,
@@ -455,27 +519,32 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 13,
   },
+
   filterPanelHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
+
   filterPanelTitle: {
     color: COLORS.text,
     fontWeight: '600',
     fontSize: 13,
   },
+
   clearFilters: {
     color: COLORS.primary,
     fontWeight: '400',
     fontSize: 12,
   },
+
   statusFilters: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 7,
   },
+
   statusFilterChip: {
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -483,39 +552,45 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 18,
   },
+
   statusFilterChipActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+
   statusFilterText: {
     color: COLORS.textSecondary,
     fontWeight: '400',
     fontSize: 10,
   },
+
   statusFilterTextActive: {
     color: COLORS.textWhite,
   },
 
-  // Inventory
   resultsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
+
   resultsTitle: {
     color: COLORS.navy,
     fontWeight: '600',
     fontSize: 14,
   },
+
   resultsCount: {
     color: COLORS.textSecondary,
     fontWeight: '400',
     fontSize: 11,
   },
+
   equipmentList: {
     gap: 5,
   },
+
   equipmentCard: {
     minHeight: 86,
     flexDirection: 'row',
@@ -528,13 +603,18 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 13,
   },
+
+  // Apariencia de la tarjeta seleccionada.
   selectedCard: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS.backgroundSelected,
   },
+
+  // Efecto visual al presionar una tarjeta.
   cardPressed: {
     opacity: 0.78,
   },
+
   equipmentImage: {
     width: 51,
     height: 57,
@@ -543,6 +623,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F5FC',
     borderRadius: 9,
   },
+
   productImage: {
     width: '100%',
     height: '100%',
@@ -554,46 +635,52 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 2,
   },
+
   equipmentName: {
     maxWidth: '100%',
     color: COLORS.navy,
     fontWeight: '600',
     fontSize: 14,
   },
+
   equipmentCode: {
     color: COLORS.textSecondary,
     fontWeight: '400',
     fontSize: 10,
   },
+
   statusBadge: {
     marginTop: 2,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
   },
+
   statusText: {
     fontWeight: '500',
     fontSize: 10,
   },
 
-  // No results
   emptyState: {
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 42,
     gap: 10,
   },
+
   emptyTitle: {
     color: COLORS.navy,
     fontWeight: '700',
     fontSize: 16,
   },
+
   emptyDescription: {
     color: COLORS.textSecondary,
     fontWeight: '400',
     fontSize: 12,
     textAlign: 'center',
   },
+
   resetButton: {
     marginTop: 7,
     paddingHorizontal: 16,
@@ -601,6 +688,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 12,
   },
+
   resetButtonText: {
     color: COLORS.textWhite,
     fontWeight: '500',

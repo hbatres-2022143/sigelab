@@ -1,6 +1,7 @@
 import { COLORS } from '@/constants/colors';
 import { dashboardStats, quickAccessItems } from '@/data/dashboard';
-import { router } from 'expo-router';
+import { getCurrentUser } from '@/data/session';
+import { router, useFocusEffect } from 'expo-router';
 import {
   ChartNoAxesColumnIncreasing,
   CheckCircle2,
@@ -12,9 +13,12 @@ import {
   Search,
   Wrench,
 } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Define los colores de fondo, iconos, bordes y textos
+// correspondientes a cada tipo de estadística.
 const statColors = {
   total: {
     color: '#2949E8',
@@ -48,6 +52,8 @@ const statColors = {
   },
 };
 
+// Relaciona los identificadores de las estadísticas
+// con sus respectivos iconos.
 const statIcons = {
   monitorsmartphone: MonitorSmartphone,
   available: CheckCircle2,
@@ -56,6 +62,8 @@ const statIcons = {
   maintenance: Wrench,
 };
 
+// Relaciona los identificadores de accesos rápidos
+// con los iconos que se muestran en cada tarjeta.
 const quickIcons = {
   search: Search,
   scanner: ScanLine,
@@ -63,40 +71,76 @@ const quickIcons = {
   reports: ChartNoAxesColumnIncreasing,
 };
 
+// Define las rutas de destino para cada acceso rápido.
 const quickRoutes: Record<string, string> = {
   equipment: '/tabs/equipment',
   scanner: '/tabs/scanner',
-  loans: '/tabs/loans',
+  loans: '/loans',
   reports: '/tabs/reports',
 };
-export default function Dashboard() {
-  const totalStat = dashboardStats.find((item) => item.id === 'total');
 
+export default function Dashboard() {
+  // Obtiene los datos del usuario que inició sesión.
+  const [user, setUser] = useState(getCurrentUser());
+
+  // Actualiza la información del usuario cada vez
+  // que se vuelve a enfocar la pantalla.
+  useFocusEffect(
+    useCallback(() => {
+      setUser(getCurrentUser());
+    }, []),
+  );
+  // Genera las iniciales del nombre completo
+  // para mostrarlas en el avatar del usuario.
+  const initials =
+    user?.fullName
+      ?.trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join('') || 'U';
+
+  // Obtiene el primer nombre para el mensaje de bienvenida.
+  const firstName = user?.fullName?.trim().split(/\s+/)[0] || 'Usuario';
+  // Obtiene la estadística principal del inventario.
+  const totalStat = dashboardStats.find((item) => item.id === 'total');
+  // Obtiene las demás estadísticas excluyendo el total.
   const otherStats = dashboardStats.filter((item) => item.id !== 'total');
+
   return (
     <SafeAreaView
       style={styles.container}
       edges={['top']}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>H</Text>
-          </View>
-          <View style={styles.greeting}>
-            <Text style={styles.greetingTitle}>Hola, Hermes</Text>
-            <Text style={styles.greetingSubtitle}>Bienvenido a SigeLab</Text>
-          </View>
+      {/* ENCABEZADO Y BIENVENIDA DEL USUARIO */}
+      <View style={styles.header}>
+        {/* AVATAR CON INICIALES */}
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials}</Text>
         </View>
-        <View style={styles.headerSeparator} />
 
-        {/* Details */}
+        {/* MENSAJE DE BIENVENIDA */}
+        <View style={styles.greeting}>
+          <Text
+            style={styles.greetingTitle}
+            numberOfLines={1}
+          >
+            Hola, {firstName}
+          </Text>
+          <Text style={styles.greetingSubtitle}>Bienvenido a SigeLab</Text>
+        </View>
+      </View>
+      {/* CONTENIDO PRINCIPAL DEL DASHBOARD */}
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ESTADÍSTICA GENERAL DEL INVENTARIO */}
         {totalStat && (
           <View style={styles.totalCard}>
+            {/* ICONO DE EQUIPOS REGISTRADOS */}
             <View style={styles.totalIconBox}>
               <MonitorSmartphone
                 size={30}
@@ -104,6 +148,7 @@ export default function Dashboard() {
                 strokeWidth={2}
               />
             </View>
+            {/* TÍTULO Y CANTIDAD TOTAL */}
             <View style={styles.totalInfo}>
               <Text style={styles.totalLabel}>{totalStat.title}</Text>
 
@@ -111,9 +156,12 @@ export default function Dashboard() {
             </View>
           </View>
         )}
+        {/* TARJETAS DE ESTADÍSTICAS DEL INVENTARIO */}
         <View style={styles.statsGrid}>
           {otherStats.map((item) => {
+            // Obtiene el icono correspondiente a la estadística.
             const Icon = statIcons[item.icon as keyof typeof statIcons];
+            // Obtiene la paleta de colores según el tipo de estadística.
             const palette = statColors[item.id as keyof typeof statColors];
             return (
               <View
@@ -126,6 +174,7 @@ export default function Dashboard() {
                   },
                 ]}
               >
+                {/* ICONO DE LA ESTADÍSTICA */}
                 <View
                   style={[
                     styles.statIconBox,
@@ -142,6 +191,8 @@ export default function Dashboard() {
                     />
                   )}
                 </View>
+
+                {/* INFORMACIÓN Y VALOR DE LA ESTADÍSTICA */}
                 <View style={styles.statInfo}>
                   <Text
                     style={[styles.statLabel, { color: palette.color }]}
@@ -149,36 +200,45 @@ export default function Dashboard() {
                   >
                     {item.title}
                   </Text>
+
                   <Text style={styles.statValue}>{item.value}</Text>
                 </View>
               </View>
             );
           })}
         </View>
+        {/* SEPARADOR ENTRE ESTADÍSTICAS Y ACCESOS */}
         <View style={styles.separator}>
           <View style={styles.separatorLine} />
         </View>
-
-        {/* Access */}
-        <View style={styles.quickSection}>
+        {/* SECCIÓN DE ACCESOS RÁPIDOS */}
+        <View>
+          {/* TÍTULO DE LA SECCIÓN */}
           <Text style={styles.sectionTitle}>Accesos rápidos</Text>
+          {/* TARJETAS DE NAVEGACIÓN */}
           <View style={styles.quickGrid}>
             {quickAccessItems.map((item) => {
+              // Obtiene el icono correspondiente al acceso rápido.
               const Icon = quickIcons[item.icon as keyof typeof quickIcons];
+
               return (
                 <Pressable
                   key={item.id}
+                  // Navega a la pantalla correspondiente al acceso seleccionado.
                   onPress={() => {
                     const path = quickRoutes[item.action];
+
                     if (path) {
                       router.push(path as never);
                     }
                   }}
+                  // Aplica un efecto visual al presionar la tarjeta.
                   style={({ pressed }) => [
                     styles.quickCard,
                     pressed && styles.quickCardPressed,
                   ]}
                 >
+                  {/* ICONO DEL ACCESO RÁPIDO */}
                   <View style={styles.quickIconBox}>
                     {Icon && (
                       <Icon
@@ -188,6 +248,7 @@ export default function Dashboard() {
                       />
                     )}
                   </View>
+                  {/* NOMBRE DEL ACCESO RÁPIDO */}
                   <Text style={styles.quickTitle}>{item.title}</Text>
                 </Pressable>
               );
@@ -202,25 +263,31 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.navy,
   },
+
   scrollContent: {
-    paddingHorizontal: 30,
-    paddingTop: 12,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 40,
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 22,
-    paddingVertical: 4,
+    paddingHorizontal: 30,
+    paddingTop: 8,
+    paddingBottom: 36,
+    backgroundColor: COLORS.navy,
   },
+
   headerSeparator: {
     height: 1,
     backgroundColor: COLORS.borderDark,
     marginBottom: 20,
     marginHorizontal: -30,
   },
+
   avatar: {
     width: 48,
     height: 48,
@@ -231,24 +298,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   avatarText: {
     fontSize: 21,
     fontWeight: '700',
     color: COLORS.primary,
   },
+
   greeting: {
+    flex: 1,
     marginLeft: 12,
   },
+
   greetingTitle: {
     fontSize: 19,
     fontWeight: '700',
-    color: COLORS.text,
+    color: COLORS.textWhite,
   },
+
   greetingSubtitle: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: COLORS.textWhiteSecondary,
     marginTop: 3,
   },
+
+  content: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 17,
+    borderTopRightRadius: 17,
+  },
+
   totalCard: {
     minHeight: 100,
     backgroundColor: statColors.total.background,
@@ -260,6 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+
   totalIconBox: {
     width: 58,
     height: 58,
@@ -269,26 +350,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
+
   totalInfo: {
     flex: 1,
   },
+
   totalLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: statColors.total.color,
   },
+
   totalValue: {
     fontSize: 28,
     fontWeight: '600',
     color: COLORS.text,
     marginTop: 2,
   },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: 10,
   },
+
   statCard: {
     width: '48.5%',
     minHeight: 90,
@@ -299,6 +385,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   statIconBox: {
     width: 42,
     height: 42,
@@ -307,41 +394,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 9,
   },
+
   statInfo: {
     flex: 1,
     justifyContent: 'center',
   },
+
   statLabel: {
     fontSize: 12,
     lineHeight: 15,
     fontWeight: '600',
   },
+
   statValue: {
     fontSize: 22,
     fontWeight: '800',
     color: COLORS.text,
     marginTop: 3,
   },
+
   separator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 15,
     marginVertical: 25,
   },
+
   separatorLine: {
     flex: 1,
     height: 1.5,
     backgroundColor: COLORS.borderDark,
   },
-  quickSection: {
-    marginTop: 25,
-  },
+
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: 13,
   },
+
   quickGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

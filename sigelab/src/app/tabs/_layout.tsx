@@ -21,14 +21,15 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.border,
-          height: 60 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 8),
+          height: 62 + insets.bottom,
+          paddingTop: 7,
+          paddingBottom: insets.bottom + 5,
         },
         tabBarLabelStyle: {
           fontWeight: '500',
           fontSize: 11,
         },
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen

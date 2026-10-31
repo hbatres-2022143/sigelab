@@ -14,6 +14,8 @@ import {
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Define los colores de cada categoría de equipos.
+// Cada categoría tiene un color principal, fondo, fondo del icono y borde.
 const statColors = {
   total: {
     color: '#2949E8',
@@ -47,6 +49,8 @@ const statColors = {
   },
 };
 
+// Calcula automáticamente la cantidad de equipos según su estado.
+// Los valores se obtienen directamente de equipmentData.
 const dashboardStats = [
   {
     id: 'total',
@@ -81,6 +85,8 @@ const dashboardStats = [
   },
 ] as const;
 
+// Define las secciones a las que el usuario puede acceder
+// desde la pantalla de reportes.
 const reportOptions = [
   {
     id: 'inventory',
@@ -107,7 +113,7 @@ const reportOptions = [
     Icon: History,
     color: '#2563EB',
     background: '#DCE9FF',
-    route: '/tabs/loans',
+    route: '/loans',
   },
   {
     id: 'maintenance',
@@ -121,8 +127,11 @@ const reportOptions = [
 ];
 
 export default function Reports() {
+  // Separa la estadística principal del resto de estadísticas
   const totalStat = dashboardStats[0];
   const otherStats = dashboardStats.slice(1);
+
+  // Obtiene el icono y la paleta de colores de la tarjeta principal
   const TotalIcon = totalStat.Icon;
   const totalPalette = statColors.total;
 
@@ -137,7 +146,6 @@ export default function Reports() {
           Consulta estadísticas del laboratorio
         </Text>
       </View>
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
@@ -160,6 +168,7 @@ export default function Reports() {
             },
           ]}
         >
+          {/* Icono de total de equipos */}
           <View
             style={[
               styles.totalIconBox,
@@ -172,6 +181,8 @@ export default function Reports() {
               strokeWidth={2}
             />
           </View>
+
+          {/* Nombre y cantidad total de equipos */}
           <View style={styles.totalInfo}>
             <Text style={[styles.totalLabel, { color: totalPalette.color }]}>
               {totalStat.title}
@@ -179,11 +190,15 @@ export default function Reports() {
             <Text style={styles.totalValue}>{totalStat.value}</Text>
           </View>
         </View>
+
         <View style={styles.statsGrid}>
           {otherStats.map((item) => {
+            // Obtiene los colores y el icono correspondientes
             const palette = statColors[item.id];
             const Icon = item.Icon;
+
             return (
+              // Tarjeta individual de cada estado
               <View
                 key={item.id}
                 style={[
@@ -194,6 +209,7 @@ export default function Reports() {
                   },
                 ]}
               >
+                {/* Icono de la categoría */}
                 <View
                   style={[
                     styles.statIconBox,
@@ -207,6 +223,7 @@ export default function Reports() {
                   />
                 </View>
 
+                {/* Información de la estadística */}
                 <View style={styles.statInfo}>
                   <Text
                     style={[styles.statLabel, { color: palette.color }]}
@@ -214,6 +231,8 @@ export default function Reports() {
                   >
                     {item.title}
                   </Text>
+
+                  {/* Cantidad de equipos según su estado */}
                   <Text style={styles.statValue}>{item.value}</Text>
                 </View>
               </View>
@@ -222,14 +241,19 @@ export default function Reports() {
         </View>
 
         <View style={styles.reportsSection}>
+          {/* Título y descripción de la sección */}
           <Text style={styles.sectionTitle}>Reportes disponibles</Text>
           <Text style={styles.sectionSubtitle}>
             Selecciona una sección para consultar sus datos
           </Text>
+
           <View style={styles.reportList}>
             {reportOptions.map((item) => {
+              // Obtiene el icono de cada opción
               const Icon = item.Icon;
+
               return (
+                // Tarjeta interactiva que permite navegar a otra sección
                 <Pressable
                   key={item.id}
                   onPress={() => router.push(item.route as never)}
@@ -238,6 +262,7 @@ export default function Reports() {
                     pressed && styles.reportCardPressed,
                   ]}
                 >
+                  {/* Icono representativo del reporte */}
                   <View
                     style={[
                       styles.reportIconBox,
@@ -250,12 +275,16 @@ export default function Reports() {
                       strokeWidth={2}
                     />
                   </View>
+
+                  {/* Título y descripción de la opción */}
                   <View style={styles.reportInfo}>
                     <Text style={styles.reportTitle}>{item.title}</Text>
                     <Text style={styles.reportDescription}>
                       {item.description}
                     </Text>
                   </View>
+
+                  {/* Indicador visual de navegación */}
                   <ChevronRight
                     size={21}
                     color={COLORS.icon}
@@ -302,6 +331,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 30,
   },
+  // TÍTULOS DE LAS SECCIONES
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -319,6 +349,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 12,
   },
+
   totalCard: {
     minHeight: 100,
     borderWidth: 1,
@@ -407,6 +438,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 13,
   },
+  // Apariencia de la tarjeta cuando el usuario la presiona
   reportCardPressed: {
     opacity: 0.75,
     backgroundColor: COLORS.primaryLight,
